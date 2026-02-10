@@ -1,3 +1,4 @@
+// models/Product.js
 import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
@@ -29,6 +30,15 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // ──────────────── NEW FIELD ────────────────
+  category: {
+
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'Category',
+  required: true,
+},
+    
+ 
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -1,23 +1,32 @@
-// src/pages/ProductDetail.jsx
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import axios from "axios";
+import useCartStore from "../store/cartStore";
 
 const ProductDetail = () => {
-  const { id } = useParams(); // from URL: /product/:id
+  const { id } = useParams(); // /product/:id
+   const addToCart = useCartStore((state) => state.addToCart);
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
+  // 🔹 Fetch product
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const res = await fetch(`http://localhost:5000/api/products/${id}`);
         if (!res.ok) throw new Error("Product not found");
+
         const data = await res.json();
         setProduct(data);
-        if (data.size?.length > 0) setSelectedSize(data.size[0]);
+
+        if (data.size?.length > 0) {
+          setSelectedSize(data.size[0]);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -28,15 +37,41 @@ const ProductDetail = () => {
     fetchProduct();
   }, [id]);
 
-  const handleAddToCart = () => {
+  // 🔹 Add to cart
+  const handleAddToCart = async () => {
     if (!selectedSize) {
       alert("Please select a size");
       return;
     }
-    // In real app → use Cart context / Redux / localStorage
+     addToCart(product._id, quantity);
     alert(`Added ${quantity} × ${product.name} (Size: ${selectedSize}) to cart!`);
+
+    // try {
+    //   const token = localStorage.getItem("token");
+
+    //   const response = await axios.post(
+    //     "http://localhost:5000/api/cart/add",
+    //     {
+    //       productId: product._id,
+    //       quantity: quantity,
+    //       size: selectedSize,
+    //     },
+    //     {
+    //       headers: token
+    //         ? { Authorization: `Bearer ${token}` }
+    //         : {},
+    //     }
+    //   );
+
+    //   console.log(response.data);
+    //   alert("Added to cart ✅");
+    // } catch (error) {
+    //   console.error(error);
+    //   alert("Failed to add to cart ❌");
+    // }
   };
 
+  // 🔹 Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-base-200">
@@ -45,6 +80,7 @@ const ProductDetail = () => {
     );
   }
 
+  // 🔹 Error state
   if (error || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-base-200">
@@ -59,7 +95,8 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-base-200 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Product Image Section */}
+          
+          {/* 🖼 Product Image */}
           <div className="flex flex-col items-center lg:items-start">
             <div className="w-full max-w-2xl bg-base-100 rounded-2xl shadow-2xl overflow-hidden">
               <img
@@ -68,42 +105,36 @@ const ProductDetail = () => {
                 className="w-full h-auto object-cover"
               />
             </div>
-
-            {/* Optional thumbnails if you have multiple images */}
-            {/* <div className="flex gap-4 mt-6">
-              {[1,2,3].map((i) => (
-                <div key={i} className="w-24 h-24 bg-base-100 rounded-lg cursor-pointer hover:ring-2 ring-primary">
-                  <img src="..." alt="thumb" className="w-full h-full object-cover rounded-lg" />
-                </div>
-              ))}
-            </div> */}
           </div>
 
-          {/* Product Info Section */}
+          {/* 📄 Product Info */}
           <div className="flex flex-col justify-center">
             <div className="space-y-6">
+
               <div>
-                <h1 className="text-4xl font-bold text-base-content">{product.title || product.name}</h1>
+                <h1 className="text-4xl font-bold">
+                  {product.title || product.name}
+                </h1>
                 <p className="text-xl text-primary font-semibold mt-2">
                   ${product.price.toFixed(2)}
                 </p>
               </div>
 
-              <div className="prose max-w-none text-base-content/80">
-                <p>{product.description}</p>
-              </div>
+              <p className="text-base-content/80">
+                {product.description}
+              </p>
 
-              {/* Sizes */}
+              {/* 👕 Size */}
               <div>
-                <label className="label">
-                  <span className="label-text font-semibold">Size</span>
-                </label>
-                <div className="flex flex-wrap gap-3">
+                <label className="label font-semibold">Size</label>
+                <div className="flex gap-3 flex-wrap">
                   {product.size?.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`btn btn-outline ${selectedSize === size ? "btn-primary" : ""}`}
+                      className={`btn btn-outline ${
+                        selectedSize === size ? "btn-primary" : ""
+                      }`}
                     >
                       {size}
                     </button>
@@ -111,11 +142,9 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              {/* Quantity */}
+              {/* 🔢 Quantity */}
               <div className="form-control w-40">
-                <label className="label">
-                  <span className="label-text font-semibold">Quantity</span>
-                </label>
+                <label className="label font-semibold">Quantity</label>
                 <div className="flex items-center gap-3">
                   <button
                     className="btn btn-outline btn-sm"
@@ -123,13 +152,17 @@ const ProductDetail = () => {
                   >
                     -
                   </button>
+
                   <input
                     type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-                    className="input input-bordered w-20 text-center"
                     min="1"
+                    value={quantity}
+                    onChange={(e) =>
+                      setQuantity(Math.max(1, Number(e.target.value)))
+                    }
+                    className="input input-bordered w-20 text-center"
                   />
+
                   <button
                     className="btn btn-outline btn-sm"
                     onClick={() => setQuantity((q) => q + 1)}
@@ -139,7 +172,7 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              {/* Actions */}
+              {/* 🛒 Actions */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <button
                   onClick={handleAddToCart}
@@ -147,29 +180,33 @@ const ProductDetail = () => {
                 >
                   Add to Cart
                 </button>
-                <button className="btn btn-outline flex-1 text-lg">
-                  Buy Now
-                </button>
+<Link
+  to={`/buy-now/${product._id}`}
+  className="btn btn-primary btn-lg"
+>
+  Buy Now
+</Link>
               </div>
 
-              {/* Additional info */}
-              <div className="divider my-8"></div>
+              <div className="divider"></div>
 
+              {/* ℹ Extra Info */}
               <div className="grid grid-cols-2 gap-6 text-sm">
                 <div>
                   <h3 className="font-semibold">Free Shipping</h3>
-                  <p className="text-base-content/70">On orders over $50</p>
+                  <p className="opacity-70">On orders over $50</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">30-Day Returns</h3>
-                  <p className="text-base-content/70">Easy returns policy</p>
+                  <p className="opacity-70">Easy return policy</p>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
 
-        {/* Back to products */}
+        {/* 🔙 Back */}
         <div className="mt-12 text-center">
           <Link to="/products" className="link link-primary text-lg">
             ← Back to all products

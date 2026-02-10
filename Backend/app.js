@@ -9,7 +9,11 @@ import { fileURLToPath } from 'url';
 // Routes
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
-import productRoutes from './routes/productR.js'; // fixed typo: productRout → productRoutes
+import productRoutes from './routes/productR.js';
+import cartRoutes from './routes/cartR.js';
+import orderRoutes from './routes/orderR.js';
+import categoryRoutes from './routes/catagoryR.js';
+
 
 
 // Get __dirname in ESM
@@ -34,6 +38,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 
 app.use('/api/auth', authRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/categories', categoryRoutes);
     
 app.use('/api/admin', adminRoutes);
 app.use('/api/products', productRoutes); // fixed variable name

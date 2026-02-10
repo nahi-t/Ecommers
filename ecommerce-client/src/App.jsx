@@ -11,6 +11,12 @@ import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Cart from "./pages/Cart";
+import { useEffect } from "react";
+import useCartStore from "./store/cartStore";
+import BuyNow from "./pages/BuyNow";
+import CategoryPage from "./pages/Catagory";
+
 
 // Optional: 404 page (recommended)
 const NotFound = () => (
@@ -24,6 +30,11 @@ const NotFound = () => (
 );
 
 function App() {
+   const initializeCart = useCartStore((state) => state.initializeCart);
+
+  useEffect(() => {
+    initializeCart();
+  }, []);
   return (
     <div className="min-h-screen flex flex-col bg-base-200">
       {/* Navbar always visible */}
@@ -31,6 +42,7 @@ function App() {
 
       {/* Main content takes remaining space */}
       <main className="flex-1">
+        
        <Routes>
   {/* Public */}
   <Route path="/login" element={<Login />} />
@@ -45,6 +57,9 @@ function App() {
     <Route path="/profile" element={<Profile />} />
     <Route path="/about" element={<About />} />
     <Route path="/contact" element={<Contact />} />
+    <Route path="/cart" element={<Cart />} /> 
+ <Route path="/buy-now/:id" element={<BuyNow />} />
+ <Route path="/category/:slug" element={<CategoryPage />} />
   </Route>
 
   {/* Admin only */}
