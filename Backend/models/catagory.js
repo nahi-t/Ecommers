@@ -33,15 +33,15 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto-create slug from name
-categorySchema.pre('save', function (next) {
+// Auto-create slug from name (fixed for Mongoose 9+)
+categorySchema.pre('save', function () {
   if (this.isModified('name')) {
     this.slug = this.name
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '');
   }
-  next();
+  // No next() needed anymore — Mongoose proceeds automatically
 });
 
 // Virtual populate for products
