@@ -30,6 +30,11 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  slug: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   // ──────────────── NEW FIELD ────────────────
   category: {
 
@@ -39,11 +44,11 @@ const productSchema = new mongoose.Schema({
 },
     
  
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+  // createdBy: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'User',
+  //   required: true,
+  // },
 }, { timestamps: true });
 
 export default mongoose.model('Product', productSchema);

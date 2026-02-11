@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import Category from '../models/catagory.js';
 import Product from '../models/Product.js';
+import mongoose from 'mongoose';  
 
 import express from 'express';
 
@@ -99,9 +100,68 @@ export const deleteCategory = asyncHandler(async (req, res) => {
     message: 'Category deleted successfully',
   });
 });
+// ────────────────────────────────────────────────
+// GET CATEGORY BY NAME (Public)
+// ────────────────────────────────────────────────
+export const getCategoryByName = asyncHandler(async (req, res) => {
+  const { name } = req.params; // get name from URL: /api/categories/name/:name
+
+  if (!name) {
+    res.status(400);
+    throw new Error('Category name is required');
+  }
+
+  const category = await Category.findOne({ name: name }).select('name slug description icon');
+
+  if (!category) {
+    res.status(404);
+    throw new Error('Category not found');
+  }
+
+  res.json({
+    success: true,
+    category,
+  });
+});
+// controllers/categoryController.js
+
+export const getCategoryWithProducts = asyncHandler(async (req, res) => {
+  const { id } = req.params; // can be ObjectId or slug
+
+  let category;
+
+  // Check if id is valid ObjectId, else treat as slug
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    category = await Category.findById(id)
+      .populate({
+        path: 'products',
+      // optional: only active products
+      });
+  } else {
+    category = await Category.findOne({ slug: id })
+      .populate({
+        path: 'products',
+      
+      });
+  }
+
+  if (!category) {
+    res.status(404);
+    throw new Error('Category not found');
+  }
+
+  res.json({
+    success: true,
+    category,
+  });
+});
+
 export default {
   createCategory,
   getCategories,
   updateCategory,
   deleteCategory,
+  getCategoryByName,
+
+  getCategoryWithProducts,
 };

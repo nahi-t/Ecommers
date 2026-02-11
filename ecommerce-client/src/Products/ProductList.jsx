@@ -1,19 +1,35 @@
 // src/pages/Products.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import useCartStore from "../store/cartStore";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSizes, setSelectedSizes] = useState({}); // track size per product
+  const [quantity, setQuantity] = useState({}); // track quantity per product
   const [error, setError] = useState(null);
+  const addToCart = useCartStore((state) => state.addToCart);
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/products");
+        const res = await fetch(`${API}/api/products`);
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         setProducts(data);
+
+        // Initialize size and quantity for each product
+        const initialSizes = {};
+        const initialQuantities = {};
+        data.forEach((product) => {
+          initialSizes[product._id] = product.size?.[0] || null;
+          initialQuantities[product._id] = 1;
+        });
+        setSelectedSizes(initialSizes);
+        setQuantity(initialQuantities);
+
       } catch (err) {
         setError(err.message);
       } finally {
@@ -23,6 +39,24 @@ const Products = () => {
 
     fetchProducts();
   }, []);
+
+  const handleAddToCart = async (product) => {
+    const size = selectedSizes[product._id];
+    const qty = quantity[product._id] || 1;
+
+    if (!size) {
+      alert("Please select a size");
+      return;
+    }
+
+    try {
+      await addToCart(product._id, size, qty);
+      alert(`Added ${qty} × ${product.name} (Size: ${size}) to cart!`);
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+      alert(err.response?.data?.message || "Failed to add to cart");
+    }
+  };
 
   if (loading) {
     return (
@@ -69,7 +103,7 @@ const Products = () => {
               >
                 <figure className="relative overflow-hidden">
                   <img
-                    src={`http://localhost:5000${product.image}`}
+                    src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
                     alt={product.name}
                     className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -89,22 +123,81 @@ const Products = () => {
                     {product.description}
                   </p>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {product.size?.map((s) => (
-                      <div key={s} className="badge badge-outline badge-sm">
-                        {s}
-                      </div>
-                    ))}
+                  {/* Size selection */}
+                  <div>
+                    <label className="label font-semibold">Size</label>
+                    <div className="flex gap-3 flex-wrap">
+                      {product.size?.map((size) => (
+                        <button
+                          key={size}
+                          onClick={() =>
+                            setSelectedSizes({ ...selectedSizes, [product._id]: size })
+                          }
+                          className={`btn btn-outline ${
+                            selectedSizes[product._id] === size ? "btn-primary" : ""
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
+                  {/* Quantity controls */}
+                  <div className="form-control w-40 mt-3">
+                    <label className="label font-semibold">Quantity</label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() =>
+                          setQuantity({
+                            ...quantity,
+                            [product._id]: Math.max(1, quantity[product._id] - 1),
+                          })
+                        }
+                      >
+                        -
+                      </button>
+
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantity[product._id] || 1}
+                        onChange={(e) =>
+                          setQuantity({
+                            ...quantity,
+                            [product._id]: Math.max(1, Number(e.target.value)),
+                          })
+                        }
+                        className="input input-bordered w-20 text-center"
+                      />
+
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() =>
+                          setQuantity({
+                            ...quantity,
+                            [product._id]: (quantity[product._id] || 1) + 1,
+                          })
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
                   <div className="card-actions justify-end mt-4">
                     <Link
-                      to={`/product/${product._id}`} // or wherever your detail page is
+                      to={`/product/${product._id}`}
                       className="btn btn-primary btn-sm"
                     >
                       View Details
                     </Link>
-                    <button className="btn btn-outline btn-sm">
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className="btn btn-primary flex-1 text-lg"
+                    >
                       Add to Cart
                     </button>
                   </div>

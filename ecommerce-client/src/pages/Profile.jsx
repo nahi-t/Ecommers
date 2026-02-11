@@ -6,6 +6,7 @@ import axios from 'axios';
 
 const Profile = () => {
   const navigate = useNavigate();
+const API = import.meta.env.VITE_API_URL ;
 
   const token = localStorage.getItem('token');
   const userJson = localStorage.getItem('user');
@@ -77,7 +78,7 @@ const Profile = () => {
       formPayload.append('address', formData.address);
    
 
-      const res = await axios.put('http://localhost:5000/api/auth/profile', formPayload, {
+      const res = await axios.put(`${API}/api/auth/profile`, formPayload, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -112,7 +113,7 @@ const Profile = () => {
 
     try {
       await axios.put(
-        'http://localhost:5000/api/auth/change-password',
+        `${API}/api/auth/change-password`,
         {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,

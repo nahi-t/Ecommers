@@ -6,6 +6,7 @@ import useCartStore from "../store/cartStore";
 const ProductDetail = () => {
   const { id } = useParams(); // /product/:id
    const addToCart = useCartStore((state) => state.addToCart);
+   const API=import.meta.env.VITE_API_URL ;
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/products/${id}`);
+        const res = await fetch(`${API}/api/products/${id}`);
         if (!res.ok) throw new Error("Product not found");
 
         const data = await res.json();
@@ -43,7 +44,7 @@ const ProductDetail = () => {
       alert("Please select a size");
       return;
     }
-     addToCart(product._id, quantity);
+     addToCart(product._id, selectedSize,quantity);
     alert(`Added ${quantity} × ${product.name} (Size: ${selectedSize}) to cart!`);
 
     // try {
@@ -100,7 +101,7 @@ const ProductDetail = () => {
           <div className="flex flex-col items-center lg:items-start">
             <div className="w-full max-w-2xl bg-base-100 rounded-2xl shadow-2xl overflow-hidden">
               <img
-                src={`http://localhost:5000${product.image}`}
+                  src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
                 alt={product.name}
                 className="w-full h-auto object-cover"
               />

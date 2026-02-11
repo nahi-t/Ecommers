@@ -8,9 +8,11 @@ import 'react-responsive-carousel/lib/styles/carousel.min.css'; // ← import he
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+   const API = import.meta.env.VITE_API_URL ;
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/products')
+   
+    fetch(`${API}/api/products`)
       .then(res => res.json())
       .then(data => {
         setProducts(data);
@@ -92,7 +94,8 @@ const Home = () => {
               >
                 <figure className="px-6 pt-6">
                   <img
-                    src={`http://localhost:5000${product.image}`}
+                  src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+
                     alt={product.name}
                     className="rounded-xl h-64 w-full object-contain group-hover:scale-105 transition-transform duration-500"
                   />

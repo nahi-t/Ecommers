@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, User, Mail, Phone, Home, Lock, Loader2 } from 'lucide-react';
 
 function Register() {
+  const API = import.meta.env.VITE_API_URL ;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -39,7 +40,7 @@ function Register() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${API}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

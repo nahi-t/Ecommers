@@ -41,14 +41,14 @@ const useCartStore = create((set, get) => ({
   // --------------------------
   // Add item to cart
   // --------------------------
-  addToCart: async (productId, quantity = 1) => {
+  addToCart: async (productId, size,quantity = 1) => {
     const token = localStorage.getItem('token');
     if (!token) return console.warn('User not logged in');
 
     try {
       const res = await axios.post(
         'http://localhost:5000/api/cart/add',
-        { productId, quantity },
+        { productId, quantity, size },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

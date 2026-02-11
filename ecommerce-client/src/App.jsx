@@ -59,7 +59,7 @@ function App() {
     <Route path="/contact" element={<Contact />} />
     <Route path="/cart" element={<Cart />} /> 
  <Route path="/buy-now/:id" element={<BuyNow />} />
- <Route path="/category/:slug" element={<CategoryPage />} />
+ <Route path="/category/:id/products" element={<CategoryPage />} />
   </Route>
 
   {/* Admin only */}

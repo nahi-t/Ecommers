@@ -7,6 +7,7 @@ import axios from 'axios';
 const BuyNow = () => {
   const { id } = useParams(); // /buy-now/:id
   const navigate = useNavigate();
+  const API = import.meta.env.VITE_API_URL;
  // Get cart items from store if needed
  
 
@@ -29,8 +30,9 @@ const BuyNow = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const res = await axios.get(`${API}/api/products/${id}`);
         setProduct(res.data);
+        console
       } catch (err) {
         setError(err.response?.data?.message || 'Product not found');
       } finally {
@@ -83,7 +85,7 @@ const BuyNow = () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Please login first');
 
-      await axios.post('http://localhost:5000/api/orders', orderData, {
+      await axios.post(`${API}/api/orders`, orderData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -140,7 +142,7 @@ const BuyNow = () => {
 
                 <div className="flex flex-col sm:flex-row gap-6">
                   <img
-                    src={`http://localhost:5000${product.image}`}
+                    src={`${API}${product.image}`}
                     alt={product.name}
                     className="w-full sm:w-48 h-48 object-cover rounded-xl shadow-md"
                     onError={(e) => (e.target.src = 'https://via.placeholder.com/200')}

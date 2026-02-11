@@ -7,10 +7,11 @@ const Cart = () => {
   const { cartItems, total, updateQuantity, removeItem, initializeCart } = useCartStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+ const API = import.meta.env.VITE_API_URL ;
   const token = localStorage.getItem("token");
 
   useEffect(() => {
+   
     const loadCart = async () => {
       if (!token) {
         setError("Please log in to view your cart");
@@ -93,7 +94,7 @@ const Cart = () => {
                     {/* Product Image */}
                     <div className="w-32 h-32 flex-shrink-0">
                       <img
-                        src={`http://localhost:5000${item.product?.image || "/placeholder.jpg"}`}
+                             src={`${API}${item.product?.image?.startsWith('/') ? '' : '/'}${item.product?.image}`}
                         alt={item.product?.name || "Product"}
                         className="w-full h-full object-cover rounded-lg"
                         onError={(e) => {

@@ -8,6 +8,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(""); // ← added error state
+  const API=import.meta.env.VITE_API_URL ;
 
   const navigate = useNavigate(); // ← recommended over window.location.href
 
@@ -17,7 +18,7 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${API}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AdminDashboard = () => {
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   // ─── Product State ───
   const [products, setProducts] = useState([]);
   const [formData, setFormData] = useState({
@@ -19,20 +21,15 @@ const AdminDashboard = () => {
   const [showProductModal, setShowProductModal] = useState(false);
 
   // ─── Category State ───
-  const [categories, setCategories] = useState([]); // ← important: start as empty array
-  const [catForm, setCatForm] = useState({
-    name: '',
-    description: '',
-    icon: '',
-  });
+  const [categories, setCategories] = useState([]);
+  const [catForm, setCatForm] = useState({ name: '', description: '', icon: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
-  // Shared states
+  // Shared
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // ─── Fetch Data ───
   useEffect(() => {
     fetchProducts();
     fetchCategories();
@@ -40,8 +37,8 @@ const AdminDashboard = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products');
-      setProducts(res.data);
+      const res = await axios.get(`${API}/api/products`);
+      setProducts(res.data || []);
     } catch (err) {
       showMessage('error', 'Failed to load products');
     }
@@ -49,12 +46,11 @@ const AdminDashboard = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/categories');
-       setCategories(Array.isArray(res.data.categories) ? res.data.categories : []);
- // ensure array
+      const res = await axios.get(`${API}/api/categories`);
+      setCategories(res.data.categories || res.data || []);
     } catch (err) {
       showMessage('error', 'Failed to load categories');
-      setCategories([]); // reset to empty on error
+      setCategories([]);
     }
   };
 
@@ -103,7 +99,7 @@ const AdminDashboard = () => {
       image: null,
       category: product.category?._id || product.category || '',
     });
-    setPreview(product.image ? `http://localhost:5000${product.image}` : '');
+    setPreview(product.image ? `${API}${product.image}` : '');
     setShowProductModal(true);
   };
 
@@ -111,8 +107,9 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (!formData.title || !formData.name || !formData.description || !formData.price || !formData.size || !formData.category) {
-      showMessage('error', 'All fields are required');
+    // Basic validation
+    if (!formData.title || !formData.name || !formData.description || !formData.price || !formData.category) {
+      showMessage('error', 'Please fill all required fields');
       setLoading(false);
       return;
     }
@@ -129,38 +126,42 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const url = editingProduct
-        ? `http://localhost:5000/api/products/${editingProduct._id}`
-        : 'http://localhost:5000/api/products';
+        ? `${API}/api/products/${editingProduct._id}`
+        : `${API}/api/products`;
       const method = editingProduct ? 'PUT' : 'POST';
 
-      await fetch(url, {
+      await axios({
         method,
-        headers: { Authorization: `Bearer ${token}` },
-        body: data,
+        url,
+        data,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       showMessage('success', editingProduct ? 'Product updated!' : 'Product added!');
       setShowProductModal(false);
       fetchProducts();
     } catch (err) {
-      showMessage('error', err.message || 'Operation failed');
+      showMessage('error', err.response?.data?.message || 'Failed to save product');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteProduct = async (id) => {
-    if (!window.confirm('Delete this product permanently?')) return;
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/products/${id}`, {
+      await axios.delete(`${API}/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      showMessage('success', 'Product deleted');
+      showMessage('success', 'Product deleted successfully');
       fetchProducts();
     } catch (err) {
-      showMessage('error', 'Failed to delete product');
+      showMessage('error', err.response?.data?.message || 'Failed to delete product');
     }
   };
 
@@ -178,7 +179,7 @@ const AdminDashboard = () => {
   const openEditCategory = (cat) => {
     setEditingCategory(cat);
     setCatForm({
-      name: cat.name,
+      name: cat.name || '',
       description: cat.description || '',
       icon: cat.icon || '',
     });
@@ -189,7 +190,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (!catForm.name.trim()) {
+    if (!catForm.name?.trim()) {
       showMessage('error', 'Category name is required');
       setLoading(false);
       return;
@@ -197,29 +198,19 @@ const AdminDashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      let res;
-
       if (editingCategory) {
-        res = await axios.put(
-          `http://localhost:5000/api/categories/${editingCategory._id}`,
-          catForm,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.put(`${API}/api/categories/${editingCategory._id}`, catForm, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         showMessage('success', 'Category updated!');
       } else {
-        res = await axios.post(
-          'http://localhost:5000/api/categories',
-          catForm,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.post(`${API}/api/categories`, catForm, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         showMessage('success', 'Category created!');
       }
-
-      // Refresh list
       fetchCategories();
       setShowCategoryModal(false);
-      setCatForm({ name: '', description: '', icon: '' });
-      setEditingCategory(null);
     } catch (err) {
       showMessage('error', err.response?.data?.message || 'Failed to save category');
     } finally {
@@ -228,11 +219,11 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!window.confirm('Delete this category? Products using it may become invalid.')) return;
+    if (!window.confirm('Delete this category? Products using it will lose the category association.')) return;
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/categories/${id}`, {
+      await axios.delete(`${API}/api/categories/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       showMessage('success', 'Category deleted');
@@ -246,16 +237,10 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-base-200 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
-        <h1 className="text-3xl md:text-4xl font-bold text-base-content">
-          Admin Dashboard
-        </h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-base-content">Admin Dashboard</h1>
         <div className="flex flex-wrap gap-3">
-          <button onClick={openAddProduct} className="btn btn-primary">
-            + Add Product
-          </button>
-          <button onClick={openAddCategory} className="btn btn-success">
-            + Add Category
-          </button>
+          <button onClick={openAddProduct} className="btn btn-primary">+ Add Product</button>
+          <button onClick={openAddCategory} className="btn btn-success">+ Add Category</button>
         </div>
       </div>
 
@@ -266,124 +251,58 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Categories Section */}
+      {/* ─── Categories Section ─── */}
       <div className="mb-16">
         <h2 className="text-2xl font-bold mb-6">Manage Categories</h2>
 
-        {/* Category Form */}
-        <div className="card bg-base-100 shadow-xl mb-8">
-          <div className="card-body">
-            <h3 className="card-title text-xl mb-6">
-              {editingCategory ? 'Edit Category' : 'Add New Category'}
-            </h3>
+        <button onClick={openAddCategory} className="btn btn-success mb-8">
+          + Add New Category
+        </button>
 
-            <form onSubmit={handleCategorySubmit} className="space-y-5">
-              <div className="form-control">
-                <label className="label"><span className="label-text">Name *</span></label>
-                <input
-                  type="text"
-                  name="name"
-                  value={catForm.name}
-                  onChange={handleCategoryChange}
-                  className="input input-bordered w-full"
-                  required
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label"><span className="label-text">Description (optional)</span></label>
-                <textarea
-                  name="description"
-                  value={catForm.description}
-                  onChange={handleCategoryChange}
-                  className="textarea textarea-bordered h-24 w-full"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label"><span className="label-text">Icon (optional)</span></label>
-                <input
-                  type="text"
-                  name="icon"
-                  value={catForm.icon}
-                  onChange={handleCategoryChange}
-                  className="input input-bordered w-full"
-                  placeholder="e.g. 🛋️ or fas fa-couch"
-                />
-              </div>
-
-              <div className="card-actions justify-end">
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? 'Saving...' : editingCategory ? 'Update' : 'Create'}
-                </button>
-                {editingCategory && (
-                  <button
-                    type="button"
-                    className="btn btn-outline ml-3"
-                    onClick={() => {
-                      setEditingCategory(null);
-                      setCatForm({ name: '', description: '', icon: '' });
-                    }}
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
-            </form>
+        {categories.length === 0 ? (
+          <div className="alert alert-info">No categories yet</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Slug</th>
+                  <th>Description</th>
+                  <th>Icon</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((cat) => (
+                  <tr key={cat._id}>
+                    <td className="font-medium">{cat.name}</td>
+                    <td>{cat.slug || '-'}</td>
+                    <td className="max-w-xs truncate">{cat.description || '-'}</td>
+                    <td className="text-2xl">{cat.icon || '-'}</td>
+                    <td className="space-x-2">
+                      <button
+                        onClick={() => openEditCategory(cat)}
+                        className="btn btn-sm btn-warning"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(cat._id)}
+                        className="btn btn-sm btn-error"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-
-        {/* Category List */}
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <h3 className="card-title text-xl mb-6">Existing Categories</h3>
-
-            {categories.length === 0 ? (
-              <p className="text-center opacity-70 py-8">No categories yet</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="table table-zebra w-full">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Slug</th>
-                      <th>Description</th>
-                      <th>Icon</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.isArray(categories) && categories.map((cat) => (
-                      <tr key={cat._id}>
-                        <td className="font-medium">{cat.name}</td>
-                        <td>{cat.slug}</td>
-                        <td className="max-w-xs truncate">{cat.description || '-'}</td>
-                        <td>{cat.icon || '-'}</td>
-                        <td className="space-x-2">
-                          <button
-                            onClick={() => openEditCategory(cat)}
-                            className="btn btn-sm btn-warning"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCategory(cat._id)}
-                            className="btn btn-sm btn-error"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Products Section */}
+      {/* ─── Products Section ─── */}
       <div>
         <h2 className="text-2xl font-bold mb-6">Manage Products</h2>
 
@@ -391,25 +310,27 @@ const AdminDashboard = () => {
           + Add New Product
         </button>
 
-        {/* Product List */}
         {products.length === 0 ? (
           <div className="alert alert-info">No products yet</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
-              <div key={product._id} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+              <div
+                key={product._id}
+                className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
+              >
                 <figure className="px-6 pt-6">
                   <img
-                    src={`http://localhost:5000${product.image}`}
-                    alt={product.name}
+                  src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                    alt={product.name || product.title}
                     className="rounded-xl object-contain h-48 w-full"
                   />
                 </figure>
                 <div className="card-body pt-4">
-                  <h2 className="card-title text-lg">{product.title}</h2>
+                  <h2 className="card-title text-lg">{product.title || product.name}</h2>
                   <p className="text-sm opacity-70">{product.name}</p>
                   <p className="text-xl font-bold text-primary mt-2">
-                    {product.price.toLocaleString()} ETB
+                    {Number(product.price).toLocaleString()} ETB
                   </p>
                   <div className="badge badge-outline badge-secondary mt-2">
                     {product.category?.name || 'No category'}
@@ -436,7 +357,13 @@ const AdminDashboard = () => {
       </div>
 
       {/* ─── Product Modal ─── */}
-      <input type="checkbox" id="product-modal" className="modal-toggle" checked={showProductModal} readOnly />
+      <input
+        type="checkbox"
+        id="product-modal"
+        className="modal-toggle"
+        checked={showProductModal}
+        readOnly
+      />
       <div className="modal modal-bottom sm:modal-middle" role="dialog">
         <div className="modal-box max-w-2xl">
           <button
@@ -452,7 +379,7 @@ const AdminDashboard = () => {
 
           <form onSubmit={handleProductSubmit} className="space-y-5">
             <div className="form-control">
-              <label className="label"><span className="label-text">Title</span></label>
+              <label className="label"><span className="label-text">Title *</span></label>
               <input
                 name="title"
                 value={formData.title}
@@ -463,7 +390,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className="form-control">
-              <label className="label"><span className="label-text">Name</span></label>
+              <label className="label"><span className="label-text">Name *</span></label>
               <input
                 name="name"
                 value={formData.name}
@@ -474,7 +401,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className="form-control">
-              <label className="label"><span className="label-text">Description</span></label>
+              <label className="label"><span className="label-text">Description *</span></label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -486,7 +413,7 @@ const AdminDashboard = () => {
 
             <div className="grid md:grid-cols-2 gap-5">
               <div className="form-control">
-                <label className="label"><span className="label-text">Price (ETB)</span></label>
+                <label className="label"><span className="label-text">Price (ETB) *</span></label>
                 <input
                   name="price"
                   type="number"
@@ -495,6 +422,7 @@ const AdminDashboard = () => {
                   className="input input-bordered w-full"
                   required
                   min="0"
+                  step="0.01"
                 />
               </div>
 
@@ -511,23 +439,24 @@ const AdminDashboard = () => {
             </div>
 
             <div className="form-control">
-              <label className="label"><span className="label-text">Image URL</span></label>
+              <label className="label"><span className="label-text">Image</span></label>
               <input
                 type="file"
-                name="image"
-                value={formData.image || ''}
-                onChange={handleProductChange}
-                className="input input-bordered w-full"
-                placeholder="https://..."
+                accept="image/*"
+                onChange={handleProductImage}
+                className="file-input file-input-bordered w-full"
               />
               {preview && (
                 <div className="mt-4">
-                  <img src={preview} alt="preview" className="w-32 h-32 object-contain rounded-lg mx-auto" />
+                  <img
+                    src={preview}
+                    alt="preview"
+                    className="w-32 h-32 object-contain rounded-lg mx-auto border"
+                  />
                 </div>
               )}
             </div>
 
-            {/* Category Dropdown */}
             <div className="form-control">
               <label className="label"><span className="label-text">Category *</span></label>
               <select
@@ -536,7 +465,7 @@ const AdminDashboard = () => {
                 onChange={handleProductChange}
                 className="select select-bordered w-full"
                 required
-                disabled={categories.length === 0}
+                disabled={categories.length === 0 || loading}
               >
                 <option value="">Select category</option>
                 {categories.map((cat) => (
@@ -548,19 +477,43 @@ const AdminDashboard = () => {
             </div>
 
             <div className="modal-action mt-8">
-              <button type="button" className="btn btn-outline" onClick={() => setShowProductModal(false)}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setShowProductModal(false)}
+                disabled={loading}
+              >
                 Cancel
               </button>
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Saving...' : editingProduct ? 'Update' : 'Add Product'}
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="loading loading-spinner loading-xs"></span>
+                    Saving...
+                  </>
+                ) : editingProduct ? (
+                  'Update Product'
+                ) : (
+                  'Add Product'
+                )}
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      {/* Category Modal */}
-      <input type="checkbox" id="category-modal" className="modal-toggle" checked={showCategoryModal} readOnly />
+      {/* ─── Category Modal ─── */}
+      <input
+        type="checkbox"
+        id="category-modal"
+        className="modal-toggle"
+        checked={showCategoryModal}
+        readOnly
+      />
       <div className="modal modal-bottom sm:modal-middle" role="dialog">
         <div className="modal-box max-w-lg">
           <button
@@ -598,23 +551,41 @@ const AdminDashboard = () => {
             </div>
 
             <div className="form-control">
-              <label className="label"><span className="label-text">Icon (optional)</span></label>
+              <label className="label"><span className="label-text">Icon (optional – emoji or class)</span></label>
               <input
                 type="text"
                 name="icon"
                 value={catForm.icon}
                 onChange={handleCategoryChange}
                 className="input input-bordered w-full"
-                placeholder="e.g. 🛋️"
+                placeholder="e.g. 🛋️ or fas fa-couch"
               />
             </div>
 
             <div className="modal-action mt-8">
-              <button type="button" className="btn btn-outline" onClick={() => setShowCategoryModal(false)}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setShowCategoryModal(false)}
+                disabled={loading}
+              >
                 Cancel
               </button>
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Saving...' : editingCategory ? 'Update' : 'Add Category'}
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="loading loading-spinner loading-xs"></span>
+                    Saving...
+                  </>
+                ) : editingCategory ? (
+                  'Update Category'
+                ) : (
+                  'Create Category'
+                )}
               </button>
             </div>
           </form>
