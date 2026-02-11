@@ -2,7 +2,9 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
+
 const useCartStore = create((set, get) => ({
+  
   cartItems: [],       // full items in cart
   total: 0,            // total price
   cartCount: 0,        // total number of items (sum of quantities)
@@ -25,11 +27,12 @@ const useCartStore = create((set, get) => ({
   // Fetch cart from backend (call on app load or login)
   // --------------------------
   initializeCart: async () => {
+    const API = import.meta.env.VITE_API_URL ;
     const token = localStorage.getItem('token');
     if (!token) return;
 
     try {
-      const res = await axios.get('http://localhost:5000/api/cart/get', {
+      const res = await axios.get(`${API}/api/cart/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       get()._updateFromResponse(res);
@@ -42,12 +45,13 @@ const useCartStore = create((set, get) => ({
   // Add item to cart
   // --------------------------
   addToCart: async (productId, size,quantity = 1) => {
+    const API = import.meta.env.VITE_API_URL ;
     const token = localStorage.getItem('token');
     if (!token) return console.warn('User not logged in');
 
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/cart/add',
+        `${API}/api/cart/add`,
         { productId, quantity, size },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -62,12 +66,13 @@ const useCartStore = create((set, get) => ({
   // Update quantity of a cart item
   // --------------------------
   updateQuantity: async (itemId, quantity) => {
+    const API = import.meta.env.VITE_API_URL ;
     const token = localStorage.getItem('token');
     if (!token || quantity < 1) return;
 
     try {
       const res = await axios.put(
-        'http://localhost:5000/api/cart/update',
+        `${API}/api/cart/update`,
         { itemId, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -82,11 +87,12 @@ const useCartStore = create((set, get) => ({
   // Remove an item from cart
   // --------------------------
   removeItem: async (itemId) => {
+    const API = import.meta.env.VITE_API_URL ;
     const token = localStorage.getItem('token');
     if (!token) return;
 
     try {
-      const res = await axios.delete('http://localhost:5000/api/cart/remove', {
+      const res = await axios.delete(`${API}/api/cart/remove`, {
         headers: { Authorization: `Bearer ${token}` },
         data: { itemId },
       });
