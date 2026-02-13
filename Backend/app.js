@@ -19,8 +19,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  // origin: "https://ecommers-weld-mahi.vercel.app",
-  origin: "http://localhost:5173", // adjust to your frontend URL
+  origin: "https://ecommers-weld-mahi.vercel.app",
+  // origin: "http://localhost:5173", // adjust to your frontend URL
 
   credentials: true // optional, only if you use cookies/auth
 }));// allow frontend calls
