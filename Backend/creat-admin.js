@@ -40,11 +40,7 @@ const createDefaultAdmin = async () => {
 
   } catch (error) {
     console.error('❌ Error creating admin:', error.message);
-  } finally {
-    await mongoose.disconnect();
-    console.log('Disconnected from MongoDB');
-    process.exit(0);
-  }
+  } 
 };
 
 // Call the function!
