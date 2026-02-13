@@ -2,15 +2,10 @@
 import multer from 'multer';
 import path from 'path';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import cloudinary from 'cloudinary';
+import cloudinary from 'cloudinary'; // or import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 
-// Configure Cloudinary for production
-cloudinary.v2.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
-  api_secret: process.env.CLOUD_API_SECRET,
-});
+// NO config here anymore — it's done in server.js
 
 // Local storage for development
 const localStorage = multer.diskStorage({
@@ -27,14 +22,14 @@ const localStorage = multer.diskStorage({
 
 // Cloudinary storage for production
 const cloudStorage = new CloudinaryStorage({
-  cloudinary: cloudinary.v2,
+  cloudinary: cloudinary.v2, // Use the globally configured instance
   params: {
     folder: 'ecommers_images',
     allowed_formats: ['jpg', 'jpeg', 'png'],
   },
 });
 
-// File filter (same for both)
+// File filter (unchanged)
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpeg|jpg|png/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
