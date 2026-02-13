@@ -17,7 +17,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'https://ecommers-git-main-nahom-ketemas-projects.vercel.app',
+  origin: "https://ecommers-weld.vercel.app",
+
   credentials: true // optional, only if you use cookies/auth
 }));// allow frontend calls
 app.use(express.json());
