@@ -10,17 +10,31 @@ import cartRoutes from './routes/cartR.js';
 import orderRoutes from './routes/orderR.js';
 import categoryRoutes from './routes/catagoryR.js';
 import { createDefaultAdmin } from './creat-admin.js';
+import { v2 as cloudinary } from 'cloudinary';
 
 dotenv.config();
 
 const app = express();
 
+
 // Middleware
 app.use(cors({
-  origin: "https://ecommers-weld-mahi.vercel.app",
+  // origin: "https://ecommers-weld-mahi.vercel.app",
+  origin: "http://localhost:5173", // adjust to your frontend URL
 
   credentials: true // optional, only if you use cookies/auth
 }));// allow frontend calls
+
+
+// Configure once here
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+  secure: true,
+});
+
+console.log('Cloudinary status:', !!process.env.CLOUD_API_KEY ? 'Ready' : 'API_KEY MISSING');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
