@@ -101,7 +101,8 @@ const ProductDetail = () => {
           <div className="flex flex-col items-center lg:items-start">
             <div className="w-full max-w-2xl bg-base-100 rounded-2xl shadow-2xl overflow-hidden">
               <img
-                  src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                  // src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                    src={product.image}
                 alt={product.name}
                 className="w-full h-auto object-cover"
               />

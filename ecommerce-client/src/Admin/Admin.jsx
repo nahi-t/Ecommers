@@ -99,7 +99,7 @@ const AdminDashboard = () => {
       image: null,
       category: product.category?._id || product.category || '',
     });
-    setPreview(product.image ? `${API}${product.image}` : '');
+    setPreview(product.image ? `${product.image}` : '');
     setShowProductModal(true);
   };
 
@@ -321,7 +321,8 @@ const AdminDashboard = () => {
               >
                 <figure className="px-6 pt-6">
                   <img
-                  src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                  // src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                   src={product.image} 
                     alt={product.name || product.title}
                     className="rounded-xl object-contain h-48 w-full"
                   />

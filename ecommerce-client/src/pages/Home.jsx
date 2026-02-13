@@ -94,8 +94,8 @@ const Home = () => {
               >
                 <figure className="px-6 pt-6">
                   <img
-                  src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
-
+                  // src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+            src={product.image} 
                     alt={product.name}
                     className="rounded-xl h-64 w-full object-contain group-hover:scale-105 transition-transform duration-500"
                   />

@@ -11,6 +11,7 @@ import productRoutes from './routes/productR.js';
 import cartRoutes from './routes/cartR.js';
 import orderRoutes from './routes/orderR.js';
 import categoryRoutes from './routes/catagoryR.js';
+import { createDefaultAdmin } from './creat-admin.js';
 
 dotenv.config();
 
@@ -20,7 +21,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
-app.use(cors({ origin: '*' })); // In production → restrict to your actual frontend URL
+// app.use(cors({ origin: '*' })); // In production → restrict to your actual frontend URL
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -48,7 +49,12 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
+ .then(() => {
+    console.log('MongoDB connected');
+    // Now safe to run admin creation (DB is ready)
+    return createDefaultAdmin();  // ← if async, this returns a promise → chain handles it
+  })
+
   .catch(err => {
     console.error('MongoDB connection error:', err);
     process.exit(1);

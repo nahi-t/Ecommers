@@ -30,6 +30,9 @@ const createDefaultAdmin = async () => {
       email: adminEmail,
       password: 'admin123', 
       role: 'admin',
+      phone: '1234567890',
+      address: 'Admin Address',
+      
     });
 
     await admin.save();
@@ -45,4 +48,4 @@ const createDefaultAdmin = async () => {
 };
 
 // Call the function!
- createDefaultAdmin();
+ export { createDefaultAdmin };

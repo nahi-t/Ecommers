@@ -93,7 +93,8 @@ const CategoryDetail = () => {
               >
                 <figure className="relative overflow-hidden h-64 md:h-72">
                   <img
-                                    src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                                    // src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                                     src={product.image} 
                     alt={product.name || product.title || 'Product'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     onError={(e) => (e.target.src = '/placeholder-product.jpg')}

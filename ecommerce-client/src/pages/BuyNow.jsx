@@ -142,7 +142,8 @@ const BuyNow = () => {
 
                 <div className="flex flex-col sm:flex-row gap-6">
                   <img
-                    src={`${API}${product.image}`}
+                    // src={`${API}${product.image}`}
+                     src={product.image} 
                     alt={product.name}
                     className="w-full sm:w-48 h-48 object-cover rounded-xl shadow-md"
                     onError={(e) => (e.target.src = 'https://via.placeholder.com/200')}

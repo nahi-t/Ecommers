@@ -94,7 +94,8 @@ const Cart = () => {
                     {/* Product Image */}
                     <div className="w-32 h-32 flex-shrink-0">
                       <img
-                             src={`${API}${item.product?.image?.startsWith('/') ? '' : '/'}${item.product?.image}`}
+                            //  src={`${API}${item.product?.image?.startsWith('/') ? '' : '/'}${item.product?.image}`}
+                             src={item.product?.image} 
                         alt={item.product?.name || "Product"}
                         className="w-full h-full object-cover rounded-lg"
                         onError={(e) => {

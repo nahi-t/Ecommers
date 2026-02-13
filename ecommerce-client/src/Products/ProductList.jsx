@@ -103,7 +103,8 @@ const Products = () => {
               >
                 <figure className="relative overflow-hidden">
                   <img
-                    src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                    // src={`${API}${product.image.startsWith('/') ? '' : '/'}${product.image}`}
+                     src={product.image} 
                     alt={product.name}
                     className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
                   />
